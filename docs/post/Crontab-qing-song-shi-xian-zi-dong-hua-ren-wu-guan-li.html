@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark_colorblind" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.githubassets.com/favicons/favicon.svg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="## Crontab 是什么
+
+crontab 是 Linux 系统中用于任务调度的命令工具，允许用户设定在特定时间间隔，自动执行指定的命令或脚本，极大提升运维效率。">
+<meta property="og:title" content="Crontab轻松实现自动化任务管理">
+<meta property="og:description" content="## Crontab 是什么
+
+crontab 是 Linux 系统中用于任务调度的命令工具，允许用户设定在特定时间间隔，自动执行指定的命令或脚本，极大提升运维效率。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://villianch.github.io/post/Crontab-qing-song-shi-xian-zi-dong-hua-ren-wu-guan-li.html">
+<meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
+<title>Crontab轻松实现自动化任务管理</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">Crontab轻松实现自动化任务管理</h1>
+<div class="title-right">
+    <a href="https://villianch.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/villianch/villianch.github.io/issues/3" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h2>Crontab 是什么</h2>
+<p>crontab 是 Linux 系统中用于任务调度的命令工具，允许用户设定在特定时间间隔，自动执行指定的命令或脚本，极大提升运维效率。</p>
+<h3>特性</h3>
+<p>①无需人工操作，自动运行任务</p>
+<p>②能同时安排多个任务，且各任务可独立设定执行时间</p>
+<p>③既可以指定特定日期和时间，如每月最后一天，也能按固定间隔，像每小时运行任务</p>
+<p>④即便系统重启，已设任务也会自动恢复执行</p>
+<h2>Crontab 命令基本语法</h2>
+<p>crontab 命令基本格式如下：</p>
+<pre class="notranslate"><code class="notranslate">*    *    *    *    *    command to be executed
+-    -    -    -    -
+|    |    |    |    |
+|    |    |    |    +----- day of the week (0 - 6) (Sunday=0)
+|    |    |    +------- month (1 - 12)
+|    |    +--------- day of the month (1 - 31)
+|    +----------- hour (0 - 23)
++------------- min (0 - 59)
+</code></pre>
+<p>从左至右，各字段含义依次为：分钟（0 - 59）、小时（0 - 23）、日期（1 - 31）、月份（1 - 12）、星期（0 - 6，周日为 0），最后是需执行的命令或脚本路径。</p>
+<h3>特殊字符与快捷方式</h3>
+<ol>
+<li><strong>特殊字符</strong>：</li>
+</ol>
+<ul>
+<li>
+<ul>
+<li><code class="notranslate">*</code>：代表所有可能的值，例如，* * * * * 表示每分钟执行一次。</li>
+</ul>
+</li>
+<li>
+<ul>
+<li><code class="notranslate">,</code>：用于指定多个值，例如，15,30 * * * * 表示每小时的第 15、30 分钟执行。</li>
+</ul>
+</li>
+<li>
+<ul>
+<li><code class="notranslate">-</code>：用于指定范围，例如，1-5 * * * * 表示每小时的前五分钟执行。</li>
+</ul>
+</li>
+<li>
+<ul>
+<li><code class="notranslate">/</code>：用于指定步长，例如，*/20 * * * * 表示每 20 分钟执行一次。</li>
+</ul>
+</li>
+</ul>
+<ol>
+<li><strong>快捷方式</strong>：</li>
+</ol>
+<ul>
+<li>
+<ul>
+<li><code class="notranslate">@reboot</code> ：在每次系统启动时执行一次任务。</li>
+</ul>
+</li>
+<li>
+<ul>
+<li><code class="notranslate">@yearly</code> 或 <code class="notranslate">@annually</code>：每年执行一次任务。</li>
+</ul>
+</li>
+<li>
+<ul>
+<li><code class="notranslate">@monthly</code>：每月执行一次任务。</li>
+</ul>
+</li>
+<li>
+<ul>
+<li><code class="notranslate">@weekly</code> ：每周执行一次任务。</li>
+</ul>
+</li>
+<li>
+<ul>
+<li><code class="notranslate">@daily</code> 或 <code class="notranslate">@midnight</code>：每天执行一次任务。</li>
+</ul>
+</li>
+<li>
+<ul>
+<li><code class="notranslate">@hourly</code>：每小时执行一次任务。</li>
+</ul>
+</li>
+</ul>
+<h3>示例</h3>
+<ol>
+<li><strong>每周一、三、五的下午 3 点 30 分执行磁盘空间检查脚本</strong>：</li>
+</ol>
+<pre class="notranslate"><code class="notranslate">30 15 * * 1,3,5 /path/to/disk_check.sh
+</code></pre>
+<ol>
+<li><strong>每天晚上 10 点到次日早上 6 点之间，每隔 2 小时执行一次服务器负载监测脚本</strong>：</li>
+</ol>
+<pre class="notranslate"><code class="notranslate">0 22-6/2 * * * /path/to/server_monitor.sh
+</code></pre>
+<ol>
+<li><strong>每周日的下午 5 点执行系统日志归档脚本</strong>：</li>
+</ol>
+<pre class="notranslate"><code class="notranslate">0 17 * * 0 /path/to/log_archive.sh
+</code></pre>
+<ol>
+<li><strong>每 15 分钟执行一次网络连接测试脚本</strong>：</li>
+</ol>
+<pre class="notranslate"><code class="notranslate">*/15 * * * * /path/to/network_test.sh
+</code></pre>
+<ol>
+<li><strong>每周执行一次任务</strong>：</li>
+</ol>
+<pre class="notranslate"><code class="notranslate">@weekly command to execute
+</code></pre>
+<h2>创建定时清理文件的任务</h2>
+<h3>编写 Shell 脚本</h3>
+<p>首先编写用于清理备份文件的 shell 脚本。假设要清理 30 天前位于/backup目录下的所有文件，脚本内容如下：</p>
+<pre class="notranslate"><code class="notranslate">#!/bin/bash
+find /backup -type f -mtime +30 -exec rm -rf {} \;
+</code></pre>
+<p>将上述脚本保存为[<a href="http://clean_backup_files.sh/" rel="nofollow">clean_backup_files.sh</a>](http://clean_backup_files.sh)，并赋予其执行权限：</p>
+<pre class="notranslate"><code class="notranslate">chmod +x clean_backup_files.sh
+</code></pre>
+<h3>配置 Crontab 任务</h3>
+<p>打开 crontab 编辑器：</p>
+<pre class="notranslate"><code class="notranslate">crontab -e
+</code></pre>
+<p>首次执行该命令时，系统可能会提示选择文本编辑器，如select-editor，选择熟悉的编辑器即可。</p>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/7537c200-8118-42ac-8230-ab89b0a6aafe"><img src="https://github.com/user-attachments/assets/7537c200-8118-42ac-8230-ab89b0a6aafe" alt="Image" style="max-width: 100%;"></a></p>
+<p>在打开的编辑器中添加如下内容，实现每天凌晨 2 点执行文件清理脚本：</p>
+<pre class="notranslate"><code class="notranslate">0 2 * * * /path/to/clean_backup_files.sh &gt;/dev/null 2&gt;&amp;1
+</code></pre>
+<p>这里的&gt;/dev/null 2&gt;&amp;1用于将脚本执行过程中的标准输出和标准错误输出重定向到/dev/null，避免产生多余输出。</p>
+<p>保存并退出编辑器。新添加的任务将在下一个预定时间点自动执行。</p>
+<h3>查看和管理定时任务</h3>
+<p>若要查看当前用户的所有定时任务，可使用以下命令：</p>
+<pre class="notranslate"><code class="notranslate">crontab -l
+或者
+cat /path/crontab
+</code></pre>
+<p><a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/dd5f529f-2230-4cf8-bf77-e171fa18da53"><img src="https://github.com/user-attachments/assets/dd5f529f-2230-4cf8-bf77-e171fa18da53" alt="Image" style="max-width: 100%;"></a></p>
+<p>若需删除某个定时任务，再次使用crontab -e命令进入编辑器，删除对应的任务行即可。</p>
+<h3>Crontab 的调试</h3>
+<p>检查 crontab 文件权限，确保 cron 守护进程可读取。</p>
+<p>在 crontab 命令中添加&gt;&amp; /tmp/cron.log来将输出重定向到日志文件，便于调试。</p>
+<p>使用crontab -l命令列出当前用户的所有定时任务，检查是否有语法错误。</p>
+<p>检查系统日志/var/log/syslog或/var/log/cron（根据系统不同而不同），查看 cron 守护进程的输出。</p>
+<h2>Crontab 高级技巧</h2>
+<h3>环境变量设置</h3>
+<p>在 crontab 中，环境变量可能不会像在普通 shell 中那样被自动设置。若需在 crontab 任务中使用特定环境变量，可在 crontab 文件中显式设置：</p>
+<pre class="notranslate"><code class="notranslate">PATH=/usr/local/bin:/usr/bin:/bin
+export PATH
+</code></pre>
+<p>确保这些设置位于 crontab 文件最顶部。</p>
+<h3>处理不稳定网络连接</h3>
+<p>若 crontab 任务依赖网络资源，且网络连接可能不稳定，可在脚本中添加重试逻辑。例如：</p>
+<pre class="notranslate"><code class="notranslate">*/5 * * * * /usr/local/bin/[fail-safe-command.sh](http://fail-safe-command.sh/)
+</code></pre>
+<p>在<a href="http://fail-safe-command.sh" rel="nofollow">fail-safe-command.sh</a>脚本中，添加如下重试逻辑：</p>
+<div class="highlight highlight-source-shell"><pre class="notranslate"><span class="pl-c"><span class="pl-c">#!</span>/bin/bash</span>
+MAX_RETRIES=5
+RETRY_INTERVAL=10
+COUNTER=0
+
+<span class="pl-k">while</span> [ <span class="pl-smi">$COUNTER</span> <span class="pl-k">-lt</span> <span class="pl-smi">$MAX_RETRIES</span> ]<span class="pl-k">;</span> <span class="pl-k">do</span>
+    ping -c 1 google.com <span class="pl-k">&amp;&amp;</span> <span class="pl-c1">break</span>
+    sleep <span class="pl-smi">$RETRY_INTERVAL</span>
+    COUNTER=<span class="pl-s"><span class="pl-pds">$((</span>COUNTER<span class="pl-k">+</span><span class="pl-c1">1</span><span class="pl-pds">))</span></span>
+<span class="pl-k">done</span>
+
+<span class="pl-k">if</span> [ <span class="pl-smi">$COUNTER</span> <span class="pl-k">-eq</span> <span class="pl-smi">$MAX_RETRIES</span> ]<span class="pl-k">;</span> <span class="pl-k">then</span>
+    <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>Failed to connect to Google after <span class="pl-smi">$MAX_RETRIES</span> attempts.<span class="pl-pds">"</span></span>
+<span class="pl-k">fi</span></pre></div>
+<p>这个示例脚本会尝试 ping <code class="notranslate">google.com</code>，如果失败则每隔 10 秒重试一次，最多重试 5 次。如果 5 次都失败，则输出一条失败信息。</p>
+<h2>Crontab 任务排错与调试</h2>
+<h3>检查语法</h3>
+<p>提交 crontab 文件前，使用crontab -e命令后，在退出编辑器前检查语法错误。此外，一些第三方工具如crontab.guru或vcron可提供语法校验功能。</p>
+<h3>日志记录</h3>
+<p>为 crontab 任务添加日志记录是调试关键。可在任务命令后添加重定向输出到日志文件的命令：</p>
+<pre class="notranslate"><code class="notranslate">* * * * * command to execute &gt;&gt; /path/to/logfile.log 2&gt;&amp;1
+</code></pre>
+<p>这样，命令的标准输出和标准错误都会被记录到指定日志文件中。</p>
+<h3>检查环境变量</h3>
+<p>有时crontab 任务运行失败是因为环境变量未正确设置。可在 crontab 文件中显式设置所需环境变量，或在执行的脚本中设置。</p>
+<h3>使用set -x进行跟踪</h3>
+<p>在脚本开头添加set -x命令可跟踪脚本执行过程，有助于识别脚本何处失败：</p>
+<pre class="notranslate"><code class="notranslate">#!/bin/bash
+set -x
+# Your script commands here
+</code></pre>
+<h3>检查磁盘空间</h3>
+<p>磁盘空间不足可能导致 crontab 任务无法创建日志文件或执行脚本，可以定期清理日志。</p>
+<h2>示例</h2>
+<h3>定时备份数据库</h3>
+<p>数据库定期备份是企业数据安全重要组成部分。以下是使用 crontab 定时备份 MySQL 数据库的例子：</p>
+<pre class="notranslate"><code class="notranslate">0 2 * * * /usr/bin/mysqldump -u username -p'password' database_name &gt; /path/to/backup/database_$(date +\%Y-\%m-\%d).sql
+</code></pre>
+<p>该任务会在每天凌晨 2 点执行，将数据库备份到指定路径，文件名包含日期，便于归档和恢复。</p>
+<h3>定时清理日志文件</h3>
+<p>日志文件若不定期清理，可能占用大量磁盘空间。以下是定时清理旧日志文件的例子：</p>
+<pre class="notranslate"><code class="notranslate">0 * * * * find /var/log/nginx/ -name 'access_*.log' -mtime +7 -exec rm -f {} \;
+</code></pre>
+<p>此任务会每小时检查/var/log/nginx/目录下所有名称为access_*.log的文件，若超过 7 天未被修改，就会被删除。</p>
+<h3>定时同步文件到远程服务器</h3>
+<p>若需定时将文件同步到远程服务器，可使用rsync命令。示例如下：</p>
+<pre class="notranslate"><code class="notranslate">30 23 * * * /usr/bin/rsync -avz /path/to/local/directory username@remotehost:/path/to/remote/directory
+</code></pre>
+<p>该任务会在每天晚上 11 点半执行，将本地目录内容同步到远程服务器指定目录。</p>
+<h3>定时检查系统更新</h3>
+<p>对于需保持系统更新的场景，可设置定时任务检查和安装更新。以下是基于 Debian 系统的例子：</p>
+<pre class="notranslate"><code class="notranslate">0 3 * * * /usr/bin/apt-get update &amp;&amp; /usr/bin/apt-get upgrade -y
+</code></pre>
+<p>此任务会在每天凌晨 3 点执行，更新系统包列表，并升级所有可用包。</p>
+<h3>定时执行自定义脚本</h3>
+<p>若有自定义脚本需定期执行，可直接在 crontab 中调用：</p>
+<pre class="notranslate"><code class="notranslate">*/30 * * * * /path/to/[custom_script.sh](http://custom_script.sh/)
+</code></pre>
+<p>该任务会每 30 分钟执行一次<a href="http://custom_script.sh" rel="nofollow">custom_script.sh</a>脚本。</p></div>
+<div style="font-size:small;margin-top:8px;float:right;">❤️ 转载文章请注明出处，谢谢！❤️</div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://villianch.github.io">My Blog</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if("02/27/2025"!=""){
+    var startSite=new Date("02/27/2025");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","villianch/villianch.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+
+
+</html>
